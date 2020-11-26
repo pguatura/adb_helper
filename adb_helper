@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 
 SCRIPT_ANDROID_HOME="$HOME/Android/Sdk"
 machine="$(uname -s)"
