@@ -41,6 +41,7 @@ ENV ANDROID_HOME ${ANDROID_HOME}
 
 ADD adb_helper $HOME
 
-run bash $HOME/adb_helper prepare
+RUN bash $HOME/adb_helper prepare
 
 ENV PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
+
