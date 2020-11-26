@@ -1,0 +1,48 @@
+#!/bin/sh -ex
+
+SCRIPT_ANDROID_HOME="$HOME/Android/Sdk"
+machine="$(uname -s)"
+
+case "$machine" in
+Darwin* )
+    sdk_version=commandlinetools-mac-6858069
+    ;;
+Linux* )
+    sdk_version=commandlinetools-linux-6858069
+    ;;
+esac
+
+
+JAVA_VER=$(java -version 2>&1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*"/\1\2/p;')
+if [ "$JAVA_VER" -lt 18 ]; then
+    echo "Required Java 1.8. Found:"
+    echo $(java -version 2>&1)
+    exit 1
+fi
+
+if [ -z "$ANDROID_HOME" ]; then
+    export ANDROID_HOME=$SCRIPT_ANDROID_HOME
+fi
+
+if [[ ( ! -d "$ANDROID_HOME/cmdline-tools" ) && ( ! -d "$ANDROID_HOME/platform-tools" ) ]]; then
+    export ADB_INSTALL_TIMEOUT=120
+
+    mkdir -p $ANDROID_HOME || true
+    curl --silent --show-error --location --fail --retry 3 --output /tmp/${sdk_version} https://dl.google.com/android/repository/${sdk_version}_latest.zip && \
+    unzip -q /tmp/${sdk_version} -d ${ANDROID_HOME} && \
+    rm /tmp/${sdk_version}
+    mkdir ~/.android && echo '### User Sources for Android SDK Manager' > ~/.android/repositories.cfg
+    yes | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME && yes | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --update --sdk_root=$ANDROID_HOME
+fi
+
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+if [[ ! -d "$ANDROID_HOME/platform-tools" ]]; then
+    ls -la ${ANDROID_HOME}
+    ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager "platform-tools" --sdk_root=$ANDROID_HOME
+fi
+
+if [[ "$1" == "prepare" ]];then
+    exit 0
+fi
+
+${ANDROID_HOME}/platform-tools/adb "$@"
